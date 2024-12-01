@@ -1,0 +1,124 @@
+
+<NoteBox>
+    padding: "10dp"
+    size_hint: None, None
+    size: "260dp", "100dp"
+    style: "elevated"
+
+    MDRelativeLayout:
+        MDLabel:
+            text: root.title
+            adaptive_size: True
+            color: "teal"
+            pos_hint: {'top': 1.0}
+            bold: True
+            halign: 'center'
+        MDIcon:
+            icon: "folder-outline"
+            pos_hint: {'center_x':0.02,'top': 0.7}
+            font_size: dp(14)
+        MDLabel:
+            text: root.categorie
+            adaptive_size: True
+            color: "grey"
+            pos_hint: {'x':0.1,'top': 0.7}
+            halign: 'left'
+            font_size: 16
+        MDIcon:
+            icon: "receipt"
+            pos_hint: {'center_x':0.02,'top': 0.4}
+            font_size: dp(14)
+        MDLabel:
+            text: root.create_date
+            adaptive_size: True
+            color: "grey"
+            pos_hint: {'x':0.1,'top': 0.4}
+            halign: 'left'
+            font_size: 16
+        
+        MDIcon:
+            icon: "alarm"
+            pos_hint: {'center_x':0.02,'top': 0.2}
+            font_size: dp(14)
+        MDLabel:
+            text: root.run_date
+            adaptive_size: True
+            color: "#a2bd2a"
+            pos_hint: {'x':0.1,'top': 0.2}
+            halign: 'left'
+            font_size: 16
+            
+
+<NoteMainScreen>
+    MDBoxLayout:
+        orientation: 'vertical'
+        MDTopAppBar:
+            title: "Note"
+        
+        MDScrollView:
+            do_scroll_x: False
+            do_scroll_y: True
+            MDStackLayout:
+                id: contener
+                orientation: 'lr-tb'
+                padding: 30
+                spacing: 15
+                adaptive_height: True
+        
+        MDFloatingActionButton:
+            icon: "plus"
+            pos_hint: {'center_x': 0.9,'top': 0.4}
+            on_press: root.add_new()
+            
+<NoteEditScreen>
+    MDBoxLayout:
+        orientation: 'vertical'
+        
+        MDTopAppBar:
+            title: "Note"
+            anchor_title: "left"
+            md_bg_color: "brown"
+            specific_text_color: "white"
+            left_action_items: [["keyboard-backspace", lambda x: root.back()]]
+            right_action_items: [["delete",lambda x: root.delete()],["check", lambda x: root.save()]]
+        MDBoxLayout:
+            orientation: 'vertical'
+            spacing: 10
+            padding: 10
+            MDBoxLayout:
+                size_hint: 1, .1
+                MDDropDownItem:
+                    id: drop_text
+                    text: root.categorie
+                    pos_hint: {"center_x": .5, "center_y": .5}
+                    on_press: root.open_menu(self)
+                
+            MDBoxLayout:
+                size_hint: 1, .1
+                MDTextField:
+                    id: note_title
+                    text: root.title
+                    mode: "fill"
+                    hint_text: "Titre"
+            
+            MDBoxLayout:
+                MDTextField:
+                    id: note_text
+                    text: root.note_text
+                    mode: "rectangle"
+                    hint_text: "noté ici"
+                    text_color_normal: "black"
+                    text_color_focus: "black"
+                    multiline: True
+                    pos_hint: {'center_x': 0.5,'top': 1}
+
+
+<Item>
+
+    IconLeftWidget:
+        icon: root.left_icon
+
+    RightContentCls:
+        id: container
+        icon: root.right_icon
+        text: root.right_text
