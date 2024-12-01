@@ -80,7 +80,7 @@
             md_bg_color: "brown"
             specific_text_color: "white"
             left_action_items: [["keyboard-backspace", lambda x: root.back()]]
-            right_action_items: [["delete",lambda x: root.delete()],["check", lambda x: root.save()]]
+            right_action_items: [["check", lambda x: root.save()]]
         MDBoxLayout:
             orientation: 'vertical'
             spacing: 10
@@ -122,3 +122,27 @@
         id: container
         icon: root.right_icon
         text: root.right_text
+
+
+<NoteShow>
+    MDBoxLayout:
+        orientation: 'vertical'
+        
+        MDTopAppBar:
+            title: root.note_title
+            anchor_title: "left"
+            md_bg_color: "gray"
+            specific_text_color: "black"
+            left_action_items: [["keyboard-backspace", lambda x: root.back()]]
+            right_action_items: [["delete",lambda x: root.delete()],["pencil", lambda x: root.update()]]
+        
+        MDScrollView:
+            do_scroll_x: False
+            do_scroll_y: True
+            
+            MDLabel:
+                id: note_contener
+                text: root.Text
+                adaptive_height: True
+                markup:True 
+                padding: 20

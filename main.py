@@ -44,7 +44,7 @@ class NoteBox(MDCard):
         global note_name 
         note_name = self.title
         
-        sm.current = "NoteEditScreen"
+        sm.current = "NoteShow"
         sm.transition.direction = 'left'
         
 
@@ -127,6 +127,45 @@ class NoteEditScreen(MDScreen):
             
         self.back()
     
+    
+    
+    def back(self):
+        global note_name
+        self.exist = False 
+        note_name = None
+        sm.current = "NoteMainScreen"
+        sm.transition.direction = 'right'
+
+class NoteShow(MDScreen):
+    Text = StringProperty()
+    note_title = StringProperty()
+    
+    dataObject = ObjectProperty()
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.login = True
+    
+    def on_parent(self, widget, parent):
+        if self.login:
+            if note_name != None:
+                self.exist = True
+                self.dataObject = note_backend.note_databse.get(title = note_name)[0]
+                self.note_title = self.dataObject.title
+                self.Text = self.dataObject.note_text
+        
+        self.login = not self.login
+    
+    def parsing(self,text) -> str:
+        pass
+    
+    def update(self):
+        global note_name 
+        note_name = self.title
+        
+        sm.current = "NoteEditScreen"
+        sm.transition.direction = 'left'
+    
     def delete(self):
         self.dataObject.remove()
         self.back()
@@ -137,8 +176,6 @@ class NoteEditScreen(MDScreen):
         note_name = None
         sm.current = "NoteMainScreen"
         sm.transition.direction = 'right'
-        
-    
         
 class NoteMainScreen(MDScreen):
     def __init__(self, *args, **kwargs):
@@ -174,6 +211,9 @@ class NoteApp(MDApp):
         
         sm.add_widget(
             NoteMainScreen(name="NoteMainScreen")
+        )
+        sm.add_widget(
+            NoteShow(name="NoteShow")
         )
         sm.add_widget(
             NoteEditScreen(name="NoteEditScreen")
