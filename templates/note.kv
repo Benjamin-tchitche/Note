@@ -67,7 +67,7 @@
         
         MDFloatingActionButton:
             icon: "plus"
-            pos_hint: {'center_x': 0.9,'top': 0.4}
+            pos_hint: {'center_x': 0.9,'center_y': 0.4}
             on_press: root.add_new()
             
 <NoteEditScreen>
@@ -102,15 +102,19 @@
                     hint_text: "Titre"
             
             MDBoxLayout:
-                MDTextField:
-                    id: note_text
-                    text: root.note_text
-                    mode: "rectangle"
-                    hint_text: "noté ici"
-                    text_color_normal: "black"
-                    text_color_focus: "black"
-                    multiline: True
-                    pos_hint: {'center_x': 0.5,'top': 1}
+                MDScrollView:
+                    do_scroll_x: False
+                    do_scroll_y: True
+                    MDTextField:
+                        id: note_text
+                        text: root.note_text
+                        adaptive_height: True
+                        mode: "rectangle"
+                        hint_text: "noté ici"
+                        text_color_normal: "black"
+                        text_color_focus: "black"
+                        multiline: True
+                        pos_hint: {'center_x': 0.5,'top': 1}
 
 
 <Item>
@@ -131,18 +135,80 @@
         MDTopAppBar:
             title: root.note_title
             anchor_title: "left"
-            md_bg_color: "gray"
+            md_bg_color: "ivory"
             specific_text_color: "black"
             left_action_items: [["keyboard-backspace", lambda x: root.back()]]
             right_action_items: [["delete",lambda x: root.delete()],["pencil", lambda x: root.update()]]
         
-        MDScrollView:
-            do_scroll_x: False
-            do_scroll_y: True
-            
+        MDBoxLayout:
+            orientation: 'vertical'
+            id:show_Box
+            spacing: "20dp"
+            padding: "10dp"
+            MDScrollView:
+                do_scroll_x: False
+                do_scroll_y: True
+                
+                MDBoxLayout:
+                    id: show_contener
+                    adaptive_height: True
+                    MDLabel:
+                        id: note_contener
+                        text: root.Text
+                        adaptive_height: True
+                        markup:True 
+                        padding: 20
+
+
+<OptionTemplate>
+    
+    padding: "10dp"
+    size_hint: None, None
+    size: "180dp", "200dp"
+    style: "elevated"
+    MDBoxLayout:
+        orientation: 'vertical'
+        FitImage:
+            source:root.image
+            size_hint_y: .7
+            pos_hint: {"top": 1}
+            radius: "10dp", "10dp", 0, 0
+        
+        MDRelativeLayout:
+            size_hint_y: .2
             MDLabel:
-                id: note_contener
-                text: root.Text
-                adaptive_height: True
-                markup:True 
-                padding: 20
+                text: root.Name
+                font_size: 18
+                color: "teal"
+                halign: 'center'
+                bold: True
+                pos_hint: {"center_x": 0.5,'top':1}
+                                        
+
+
+<OptionsScreen>
+    MDBoxLayout:
+        orientation: 'vertical'
+        
+        MDTopAppBar:
+            title: ""
+            anchor_title: "left"
+            md_bg_color: "ivory"
+            specific_text_color: "black"
+            left_action_items: [["keyboard-backspace", lambda x: root.back()]]
+           
+        MDBoxLayout:
+            orientation: 'vertical'
+            MDScrollView:
+                do_scroll_x: False
+                do_scroll_y: True
+                MDStackLayout:
+                    id: contener
+                    orientation: 'lr-tb'
+                    padding: 30
+                    spacing: 15
+                    adaptive_height: True
+                    
+                    
+                    
+
