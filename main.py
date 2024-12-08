@@ -1,7 +1,7 @@
 
 from kivy.lang import Builder
 from kivy.metrics import dp
-from kivy.properties import StringProperty, BooleanProperty,ObjectProperty
+from kivy.properties import StringProperty, BooleanProperty,ObjectProperty,DictProperty
 
 
 from kivymd.uix.screen import MDScreen
@@ -13,6 +13,8 @@ from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.behaviors.focus_behavior import FocusBehavior
 from kivymd.uix.behaviors import CommonElevationBehavior
 from kivymd.uix.datatables import MDDataTable
+from kivymd.uix.dialog import MDDialog
+from kivymd.uix.button import MDFlatButton
 
 from kivymd.app import MDApp
 
@@ -41,6 +43,7 @@ class NoteBox(MDCard,CommonElevationBehavior,FocusBehavior):
     create_date = StringProperty("")
     title = StringProperty("")
     tag = StringProperty()
+    parametrer = DictProperty()
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -74,10 +77,10 @@ class NoteEditScreen(MDScreen):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.standare = ["Défaut","Professionnelle","Penser-bêtes","Nouveautés"]
+        self.standare = ["Note","Journal","Penser-bêtes","Tâche","Tableau de Donnés"]
         self.icons = [""]
         self.categorie = self.standare[0]
-        
+        self.parametrer = {}
         self.login = True
         
         self.datas = {}
@@ -105,7 +108,6 @@ class NoteEditScreen(MDScreen):
         menu_items = [
             {
                 "text": f"{i}",
-                "right_text": "+Shift+X",
                 "right_icon": "apple-keyboard-command",
                 "viewclass": "Item",
                 "height": dp(54),
@@ -153,6 +155,22 @@ class NoteEditScreen(MDScreen):
             sm.current = "NoteMainScreen"
             sm.transition.direction = 'right'
 
+
+class ItemConfirm(OneLineAvatarIconListItem):
+    divider = None
+    ischeck = BooleanProperty(False)
+
+    def set_icon(self, instance_check):
+        
+        if instance_check.active:
+            instance_check.active = False
+            self.ischeck = False
+        else: 
+            instance_check.active = True
+            self.ischeck = True
+            
+        
+
 class NoteShow(MDScreen):
     Text = StringProperty()
     note_title = StringProperty()
@@ -162,9 +180,11 @@ class NoteShow(MDScreen):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.login = True
+        self.dialog = None
     
     def on_parent(self, widget, parent):
         if self.login:
+            self.dialog = None
             if note_name != None:
                 self.exist = True
                 self.dataObject = note_backend.note_databse.get(title = note_name)[0]
@@ -177,8 +197,10 @@ class NoteShow(MDScreen):
                     self.tables = MDDataTable(
                         size_hint =(1,1),
                         use_pagination=False,
+                        check = True,
                         column_data=[(k, dp(30)) for k in self.data[0]],
-                        row_data = self.data[1]
+                        row_data = self.data[1],
+                        rows_num = len(self.data[1])
                     )
                    
                     self.ids["show_Box"].clear_widgets()
@@ -248,6 +270,48 @@ class NoteShow(MDScreen):
         note_name = None
         sm.current = "NoteMainScreen"
         sm.transition.direction = 'right'
+    
+    def setting(self):
+        if not self.dialog:
+            self.dialog = MDDialog(
+                title="Choisir les parametres",
+                type="confirmation",
+                items=[
+                    ItemConfirm(text="case à cochée"),
+                    ItemConfirm(text="notification"),
+                    
+                ],
+                buttons=[
+                    MDFlatButton(
+                        text="CANCEL",
+                        theme_text_color="Custom",
+                        text_color=self.theme_cls.primary_color,
+                        on_release = self.cancel,
+                    ),
+                    MDFlatButton(
+                        text="OK",
+                        theme_text_color="Custom",
+                        text_color=self.theme_cls.primary_color,
+                        on_release = self.get_settings
+                    ),
+                ],
+            )
+        self.dialog.open()
+    
+    def cancel(self, *args):
+        if self.dialog:
+            self.dialog.dismiss()
+        
+    def get_settings(self,*args):
+        sett = []
+        for el in self.dialog.items:
+            if el.ischeck:
+                sett.append(el.text)
+        
+        # enregistrement et reload
+        
+        self.dialog.dismiss()
+        
         
 class NoteMainScreen(MDScreen):
     def __init__(self, *args, **kwargs):

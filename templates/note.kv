@@ -127,6 +127,11 @@
         icon: root.right_icon
         text: root.right_text
 
+<ItemConfirm>
+    on_release: root.set_icon(check)
+
+    CheckboxLeftWidget:
+        id: check
 
 <NoteShow>
     MDBoxLayout:
@@ -138,13 +143,14 @@
             md_bg_color: "ivory"
             specific_text_color: "black"
             left_action_items: [["keyboard-backspace", lambda x: root.back()]]
-            right_action_items: [["delete",lambda x: root.delete()],["pencil", lambda x: root.update()]]
+            right_action_items: [["delete",lambda x: root.delete()],["menu",lambda x: root.setting()],["pencil", lambda x: root.update()]]
         
         MDBoxLayout:
             orientation: 'vertical'
             id:show_Box
             spacing: "20dp"
             padding: "10dp"
+           
             MDScrollView:
                 do_scroll_x: False
                 do_scroll_y: True
