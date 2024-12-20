@@ -1,4 +1,7 @@
 
+from kivy.config import Config
+Config.set('kivy', 'window_icon', 'assets/image/note.png')
+
 from kivy.lang import Builder
 from kivy.metrics import dp
 from kivy.properties import StringProperty, BooleanProperty,ObjectProperty,DictProperty
@@ -15,6 +18,9 @@ from kivymd.uix.behaviors import CommonElevationBehavior
 from kivymd.uix.datatables import MDDataTable
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDFlatButton
+from kivymd.uix.label import MDLabel
+from kivymd.uix.textfield import MDTextField
+from kivymd.uix.scrollview import MDScrollView
 
 from kivymd.app import MDApp
 
@@ -25,8 +31,8 @@ import note_backend
 Builder.load_file("templates/note.kv")
 
 
+
 note_name = None
-current_tag = None
 
 class Item(OneLineAvatarIconListItem):
     left_icon = StringProperty()
@@ -42,22 +48,24 @@ class NoteBox(MDCard,CommonElevationBehavior,FocusBehavior):
     run_date = StringProperty("Non spécifier")
     create_date = StringProperty("")
     title = StringProperty("")
-    tag = StringProperty()
     parametrer = DictProperty()
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.login = True
 
+
+        
     def on_press(self):
-        
+       self.validate()
+            
+    def validate(self):
         global note_name 
-        global current_tag
         note_name = self.title
-        current_tag = self.tag
-        
         sm.current = "NoteShow"
         sm.transition.direction = 'left'
     
+   
     def notify(self,dt):
         if not str(self.run_date).isalpha():
             pass
@@ -77,7 +85,7 @@ class NoteEditScreen(MDScreen):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.standare = ["Note","Journal","Penser-bêtes","Tâche","Tableau de Donnés"]
+        self.standare = ["Défaut","Personnelle","Penser-bêtes","Tâche","Profesinnelle"]
         self.icons = [""]
         self.categorie = self.standare[0]
         self.parametrer = {}
@@ -97,10 +105,11 @@ class NoteEditScreen(MDScreen):
                 self.categorie = self.dataObject.categorie
                 self.title = self.dataObject.title
                 self.note_text = self.dataObject.note_text
-            
-            if current_tag != None:
-                self.categorie = current_tag
         
+        else:
+            self.ids["note_title"].text = ""
+            self.ids['note_text'].text = ""
+            
         self.login = not self.login
             
     def open_menu(self,x):
@@ -135,7 +144,6 @@ class NoteEditScreen(MDScreen):
             note_backend.note_databse.add(title = self.datas["title"],
                                         note_text = self.datas["Text"],
                                         categorie = self.datas["categorie"],
-                                        tag = current_tag,
                                         date = date
                                         )
         else:
@@ -154,22 +162,7 @@ class NoteEditScreen(MDScreen):
         else:
             sm.current = "NoteMainScreen"
             sm.transition.direction = 'right'
-
-
-class ItemConfirm(OneLineAvatarIconListItem):
-    divider = None
-    ischeck = BooleanProperty(False)
-
-    def set_icon(self, instance_check):
-        
-        if instance_check.active:
-            instance_check.active = False
-            self.ischeck = False
-        else: 
-            instance_check.active = True
-            self.ischeck = True
-            
-        
+     
 
 class NoteShow(MDScreen):
     Text = StringProperty()
@@ -183,75 +176,63 @@ class NoteShow(MDScreen):
         self.dialog = None
     
     def on_parent(self, widget, parent):
+        global note_name
+        
         if self.login:
             self.dialog = None
             if note_name != None:
                 self.exist = True
                 self.dataObject = note_backend.note_databse.get(title = note_name)[0]
                 self.note_title = self.dataObject.title
-                if current_tag != "Tableau de Donnés":
-                    self.Text = self.parsing(self.dataObject.note_text)
-                else:
-                    self.data = self.parsing(self.dataObject.note_text)
-                    
-                    self.tables = MDDataTable(
-                        size_hint =(1,1),
-                        use_pagination=False,
-                        check = True,
-                        column_data=[(k, dp(30)) for k in self.data[0]],
-                        row_data = self.data[1],
-                        rows_num = len(self.data[1])
-                    )
-                   
-                    self.ids["show_Box"].clear_widgets()
-                    self.ids["show_Box"].add_widget(self.tables)
-                    
+                self.Text = self.parsing(self.dataObject.note_text)
+                
         
         self.login = not self.login
     
     def parsing(self,md_text) -> str:
         parsed_text = ""
-        if current_tag == "notes":
-            parsed_text = self.note_parsing(md_text)
-        elif current_tag == "Tableau de Donnés":
-            parsed_text = self.data_table_parsing(md_text)
-                
+        parsed_text = self.note_parsing(md_text)
+        
+      
         return parsed_text
     
-    def data_table_parsing(self,text:str):
-        header = []
-        data = []
-        lines = text.split("\n")
-        for line in lines:
-            if line.startswith("#"):
-                header = line.replace("#","").split('-')
-            else:
-                data.append(line.split('-'))
-            
-        return (header, data)
     
     def note_parsing(self,text):
-        lines = text.split("\n")
-        
+        self.gon = False
         parsed_text = ""
+        lines = text.split("\n")
+        i=0
         for line in lines:
             line = line.strip()
             if line.startswith("# "):  # Titre de niveau 1
-                line = f"[b][size=24]{line[2:]}[/size][/b]"
+                line = f"[b][size=34]{line[2:].title()}[/size][/b]"
+                
             elif line.startswith("## "):  # Titre de niveau 2
-                line = f"[b][size=20]{line[3:]}[/size][/b]"
+                line = f"[b][size=28]{line[3:].title()}[/size][/b]"
+                
             elif line.startswith("### "):  # Titre de niveau 3
-                line = f"[b][size=18]{line[4:]}[/size][/b]"
+                line = f"[b][size=24]{line[4:].title()}[/size][/b]"
+                
             elif line.startswith("- ") or line.startswith("* "):  # Liste
-                line = f"[b][size=20]• [/size][/b]{line[2:]}"
-            
-            if "*" in line:  # Texte en gras
-                line = line.replace("*", "[b]").replace("*", "[/b]", 1)
-            if "_" in line:  # Texte en italique
-                line = line.replace("_", "[i]").replace("_", "[/i]", 1)
-            
-            
+                line = f"{' '*4}[b][size=28]• [/size][/b]{line[2:]}"
+                
+            if "**" in line:  # Texte en gras
+                line = line.replace("**", "[b]",1).replace("**", "[/b]",1)
+                i +=1
+        
+                
+            if "__" in line:  # Texte en italique
+                line = line.replace("__", "[i]",1).replace("__", "[/i]",1)
+                i += 1
+        
+        
             parsed_text += f"{line}\n"
+       
+        if i > 0:
+            parsed_text = self.note_parsing(parsed_text)
+            
+
+        return parsed_text
     
     def update(self):
         global note_name 
@@ -270,48 +251,8 @@ class NoteShow(MDScreen):
         note_name = None
         sm.current = "NoteMainScreen"
         sm.transition.direction = 'right'
-    
-    def setting(self):
-        if not self.dialog:
-            self.dialog = MDDialog(
-                title="Choisir les parametres",
-                type="confirmation",
-                items=[
-                    ItemConfirm(text="case à cochée"),
-                    ItemConfirm(text="notification"),
-                    
-                ],
-                buttons=[
-                    MDFlatButton(
-                        text="CANCEL",
-                        theme_text_color="Custom",
-                        text_color=self.theme_cls.primary_color,
-                        on_release = self.cancel,
-                    ),
-                    MDFlatButton(
-                        text="OK",
-                        theme_text_color="Custom",
-                        text_color=self.theme_cls.primary_color,
-                        on_release = self.get_settings
-                    ),
-                ],
-            )
-        self.dialog.open()
-    
-    def cancel(self, *args):
-        if self.dialog:
-            self.dialog.dismiss()
-        
-    def get_settings(self,*args):
-        sett = []
-        for el in self.dialog.items:
-            if el.ischeck:
-                sett.append(el.text)
-        
-        # enregistrement et reload
-        
-        self.dialog.dismiss()
-        
+  
+  
         
 class NoteMainScreen(MDScreen):
     def __init__(self, *args, **kwargs):
@@ -327,8 +268,8 @@ class NoteMainScreen(MDScreen):
                 note = NoteBox(
                     categorie = obj.categorie,
                     create_date = obj.date,
-                    title = obj.title,
-                    tag = obj.tag
+                    title = obj.title
+                  
                 )
                 
                 self.ids['contener'].add_widget(note)
@@ -338,68 +279,20 @@ class NoteMainScreen(MDScreen):
     def add_new(self):
         global note_name 
         note_name = None 
-        sm.current = "OptionsScreen"
-        sm.transition.direction = 'left'
-
-class OptionTemplate(MDCard):
-    Name = StringProperty()
-    image = StringProperty()
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-    
-    def on_press(self):
-        global current_tag
-        
-        current_tag = self.Name
         sm.current = "NoteEditScreen"
         sm.transition.direction = 'left'
-        
-        
-        
-class OptionsScreen(MDScreen):
+
+class Settings(MDScreen):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
-        self.image_path = os.path.join(note_backend.assets_path,'image')
-        self.template = {
-            "Journal": os.path.join(self.image_path,"journal.jpeg"),
-            "Notes" : os.path.join(self.image_path,"note.jpeg"),
-            "Tableau de Donnés": os.path.join(self.image_path,"datatble.png"),
-            "Tâches": os.path.join(self.image_path,"task.png")
-        }
-        
-        self.login = True
-    
-    def on_parent(self,widget, parent):
-        
-        if self.login:
-            self.load()
-        
-        self.login = not self.login
-    
-    def load(self): 
-        self.ids["contener"].clear_widgets()
-        for tmp in self.template.keys():
-            shw = OptionTemplate(
-                Name = tmp,
-                image = self.template.get(tmp)
-            )
-            
-            self.ids["contener"].add_widget(shw)
-            
-            
-        
-    
-    def back(self):
-        global note_name
-        self.exist = False 
-        note_name = None
-        sm.current = "NoteMainScreen"
-        sm.transition.direction = 'right'
 
+    def back(self):
+        pass 
+    
 class NoteApp(MDApp):
     def build(self):
+        self.theme_cls.theme_style = "Dark"
+        self.theme_cls.primary_palette = "BlueGray"
         global sm
         sm = MDScreenManager()
         
@@ -412,17 +305,13 @@ class NoteApp(MDApp):
         sm.add_widget(
             NoteEditScreen(name="NoteEditScreen")
         )
-        sm.add_widget(
-            OptionsScreen(name="OptionsScreen")
-        )
 
         return sm
     
 
-
-
 if not os.path.exists("databases/note_base.db"):
     os.mkdir("databases")
     note_backend.note_databse.create()
-    
+    note_backend.user_database.create()
+
 NoteApp().run()

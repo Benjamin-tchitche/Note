@@ -77,8 +77,6 @@
         MDTopAppBar:
             title: "Note"
             anchor_title: "left"
-            md_bg_color: "brown"
-            specific_text_color: "white"
             left_action_items: [["keyboard-backspace", lambda x: root.back()]]
             right_action_items: [["check", lambda x: root.save()]]
         MDBoxLayout:
@@ -100,21 +98,24 @@
                     text: root.title
                     mode: "fill"
                     hint_text: "Titre"
+                    input_type: "text"
+                    keyboard_suggestions: True
             
             MDBoxLayout:
-                MDScrollView:
-                    do_scroll_x: False
-                    do_scroll_y: True
-                    MDTextField:
-                        id: note_text
-                        text: root.note_text
-                        adaptive_height: True
-                        mode: "rectangle"
-                        hint_text: "noté ici"
-                        text_color_normal: "black"
-                        text_color_focus: "black"
-                        multiline: True
-                        pos_hint: {'center_x': 0.5,'top': 1}
+                MDTextField:
+                    id: note_text
+                    text: root.note_text
+                    #adaptive_height: True
+                    
+                    size_hint_y : 0.5
+                    mode: "rectangle"
+                    hint_text: "noté ici"
+                    text_color_normal: "white"
+                    text_color_focus: "white"
+                    multiline: True
+                    #input_type: "text"
+                    keyboard_suggestions: True
+                    pos_hint: {'center_x': 0.5,'top': 1}
 
 
 <Item>
@@ -140,81 +141,52 @@
         MDTopAppBar:
             title: root.note_title
             anchor_title: "left"
-            md_bg_color: "ivory"
-            specific_text_color: "black"
             left_action_items: [["keyboard-backspace", lambda x: root.back()]]
-            right_action_items: [["delete",lambda x: root.delete()],["menu",lambda x: root.setting()],["pencil", lambda x: root.update()]]
+            right_action_items: [["delete",lambda x: root.delete()],["pencil", lambda x: root.update()]] #["menu",lambda x: root.setting()]
         
         MDBoxLayout:
             orientation: 'vertical'
             id:show_Box
             spacing: "20dp"
             padding: "10dp"
-           
             MDScrollView:
                 do_scroll_x: False
                 do_scroll_y: True
-                
-                MDBoxLayout:
-                    id: show_contener
-                    adaptive_height: True
-                    MDLabel:
-                        id: note_contener
-                        text: root.Text
-                        adaptive_height: True
-                        markup:True 
-                        padding: 20
+                MDLabel:
+                    id: sh_note_text
+                    text: root.Text
+                    markup: True 
+                    adaptive_height:True
+                    padding: dp(10)
 
-
-<OptionTemplate>
-    
-    padding: "10dp"
-    size_hint: None, None
-    size: "180dp", "200dp"
-    style: "elevated"
-    MDBoxLayout:
-        orientation: 'vertical'
-        FitImage:
-            source:root.image
-            size_hint_y: .7
-            pos_hint: {"top": 1}
-            radius: "10dp", "10dp", 0, 0
-        
-        MDRelativeLayout:
-            size_hint_y: .2
-            MDLabel:
-                text: root.Name
-                font_size: 18
-                color: "teal"
-                halign: 'center'
-                bold: True
-                pos_hint: {"center_x": 0.5,'top':1}
-                                        
-
-
-<OptionsScreen>
+           
+<Settings>
     MDBoxLayout:
         orientation: 'vertical'
         
         MDTopAppBar:
-            title: ""
+            title: "Parametre"
             anchor_title: "left"
-            md_bg_color: "ivory"
-            specific_text_color: "black"
             left_action_items: [["keyboard-backspace", lambda x: root.back()]]
-           
+        
         MDBoxLayout:
             orientation: 'vertical'
             MDScrollView:
                 do_scroll_x: False
                 do_scroll_y: True
-                MDStackLayout:
-                    id: contener
-                    orientation: 'lr-tb'
-                    padding: 30
-                    spacing: 15
+                MDBoxLayout:
                     adaptive_height: True
-                    
-                    
-                    
+                    orientation: 'vertical'
+                    padding: dp(10)
+                    MDCard:
+                        size_hint: .9, None 
+                        height: dp(60)
+                        md_bg_color: "#454647"
+                        MDRelativeLayout:
+                            MDLabel:
+                                text: "App Thème"
+                                pos_hint: {"x": 0.1, 'top': 1}
+                            MDLabel:
+                                text: str(app.theme_cls.theme_style)
+                                pos_hint: {"x": 0.7, 'top': 1}
 
