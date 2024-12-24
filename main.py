@@ -5,7 +5,7 @@ Config.set('kivy', 'window_icon', 'assets/image/note.png')
 from kivy.lang import Builder
 from kivy.metrics import dp
 from kivy.properties import StringProperty, BooleanProperty,ObjectProperty,DictProperty
-
+from kivy.utils import get_hex_from_color
 
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.screenmanager import MDScreenManager
@@ -15,14 +15,15 @@ from kivymd.uix.list import IRightBodyTouch, OneLineAvatarIconListItem
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.behaviors.focus_behavior import FocusBehavior
 from kivymd.uix.behaviors import CommonElevationBehavior
-from kivymd.uix.datatables import MDDataTable
-from kivymd.uix.dialog import MDDialog
-from kivymd.uix.button import MDFlatButton
+from kivymd.uix.button import MDFlatButton, MDTextButton
+from kivymd.uix.dialog import  MDDialog
 from kivymd.uix.label import MDLabel
-from kivymd.uix.textfield import MDTextField
-from kivymd.uix.scrollview import MDScrollView
+from kivymd.uix.pickers.colorpicker import MDColorPicker
+
+
 
 from kivymd.app import MDApp
+from typing import Union
 
 import time,os
 import note_backend
@@ -31,8 +32,10 @@ import note_backend
 Builder.load_file("templates/note.kv")
 
 
-
+# global variable
 note_name = None
+settings_tag = None 
+
 
 class Item(OneLineAvatarIconListItem):
     left_icon = StringProperty()
@@ -276,22 +279,198 @@ class NoteMainScreen(MDScreen):
                 
         self.login = not self.login
     
+    def settings(self):
+        sm.current = "Settings"
+        sm.transition.direction = 'left'
+    
     def add_new(self):
         global note_name 
         note_name = None 
         sm.current = "NoteEditScreen"
         sm.transition.direction = 'left'
 
+
+class ItemConfirm(OneLineAvatarIconListItem):
+    divider = None
+   
+    def set_icon(self, instance_check):
+        instance_check.active = True
+        check_list = instance_check.get_widgets(instance_check.group)
+        for check in check_list:
+            if check != instance_check:
+                check.active = False
+
+
 class Settings(MDScreen):
+    text_font = StringProperty()
+    title_font = StringProperty()
+    subtitle_font = StringProperty()
+    subsubtitle_font = StringProperty()
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+        self.login = False
+    
+    def on_parent(self, widget, parent):
+        if not self.login: 
+            self.text_font = note_backend.settings_databse.get(tag = 'text')[0].font.split('/')[-1].split('.')[0]
+            self.title_font = note_backend.settings_databse.get(tag = 'title')[0].font.split('/')[-1].split('.')[0]
+            self.subtitle_font = note_backend.settings_databse.get(tag = 'subtitle')[0].font.split('/')[-1].split('.')[0]
+            self.subsubtitle_font = note_backend.settings_databse.get(tag = 'subsubtitle')[0].font.split('/')[-1].split('.')[0]
+            
+            self.ids["theme_mode"].active = True if note_backend.user_database.get(id = 1)[0].theme == "Dark" else False
+    
+    def theme_update(self,x):
+        obj = note_backend.user_database.get(id = 1)[0]
+        
+        obj.theme = "Dark" if x.active else "Light"
+        self.theme_cls = obj.theme
+        
+        obj.save()
+        
+    def update_font(self, tag):
+        global settings_tag 
+        settings_tag = tag 
+        sm.current = "FontsSettingsScreen"
+        sm.transition.direction = 'left'
+        
     def back(self):
-        pass 
+        sm.current = "NoteMainScreen"
+        sm.transition.direction = 'right' 
+ 
+class FontBox(MDCard):
+    press_fonc = ObjectProperty()
+    font_name = StringProperty()
+    
+    def  __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    
+    def on_press(self):
+        self.press_fonc(self.font_name)
+        
+class FontsSettingsScreen(MDScreen):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.settings = {
+            'tag':'title',
+            'font':'assets/fonts/PlaywriteCOGuides-Regular.ttf',
+            'font_size':16,
+            'bold':0,
+            'italic': 0,
+            'underline': 0,
+            'color': '#fffff'
+            
+        }
+        self.login = False
+        self.fonts = note_backend.get_fonts()
+    
+    def on_parent(self, widget, parent):
+        if not self.login:
+            self.settings['tag'] = settings_tag
+            obj = note_backend.settings_databse.get(tag = settings_tag)[0]
+            self.settings['font'] = obj.font
+            self.settings['font_size'] = obj.font_size
+            self.settings['bold'] = obj.bold
+            self.settings['italic'] = obj.italic
+            self.settings['underline'] = obj.underline
+            self.settings['color'] = obj.color
+            box_contener = self.ids["box_contener"]
+            box_contener.clear_widgets()
+            
+            for font in self.fonts:
+                box_contener.add_widget(
+                    FontBox(font_name = font,press_fonc = lambda x : self.font_update(x))
+                )
+        
+        
+        self.login = not self.login
+    
+    def bold_update(self):
+        if self.settings.get('bold') == 1:
+            self.settings['bold'] = 0
+        else:
+            self.settings['bold'] = 1
+        
+        self.update_overview()
+    
+    def italic_update(self):
+        if self.settings.get('italic') == 1:
+            self.settings['italic'] = 0
+        else:
+            self.settings['italic'] = 1
+        
+        self.update_overview()
+
+    
+    def underline_update(self):
+        if self.settings.get('underline') == 1:
+            self.settings['underline'] = 0
+        else:
+            self.settings['underline'] = 1
+        
+        self.update_overview()
+    
+    def font_update(self,font):
+        self.settings['font'] = f"assets/fonts/{font}"
+        
+        self.update_overview()
+    
+    def font_size_update(self,size):
+        self.settings['font_size'] = size
+        
+        self.update_overview()
+    
+    def color_update(self, color: list):
+        self.settings['color'] = get_hex_from_color(color)
+        self.update_overview()
+    
+    def update_overview(self):
+        #l = MDLabel()
+        lab = self.ids["overview"]
+        lab.font_name = self.settings['font']
+        lab.font_size = self.settings['font_size']
+        lab.bold = bool(self.settings['bold'])
+        lab.italic = bool(self.settings['italic'])
+        lab.underline = bool(self.settings['underline'])
+        lab.color = self.settings['color']
+        
+    
+    def open_color_picker(self):
+        self.color_picker = MDColorPicker(size_hint=(0.45, 0.85), type_color="HEX")
+        self.color_picker.open()
+        self.color_picker.bind(
+            #on_select_color=self.on_select_color,
+            on_release=self.get_selected_color,
+        )
+        
+    def get_selected_color(
+        self,
+        instance_color_picker: MDColorPicker,
+        type_color: str,
+        selected_color: Union[list, str],
+    ):
+        '''Return selected color.'''
+        self.color_update(selected_color[:-1] + [1])
+        self.color_picker.dismiss()
+    
+    def save(self):
+        obj = note_backend.settings_databse.get(tag = self.settings['tag'])[0]
+        obj.font=self.settings['font']
+        obj.font_size =self.settings['font_size']
+        obj.bold =self.settings['bold']
+        obj.italic = self.settings['italic']
+        obj.underline = self.settings['underline']
+        obj.color =self.settings['color']
+        obj.save()
+        self.back()
+    
+    def back(self):
+        sm.current = "Settings"
+        sm.transition.direction = 'right'
     
 class NoteApp(MDApp):
     def build(self):
-        self.theme_cls.theme_style = "Dark"
+        self.theme_cls.theme_style = note_backend.user_database.get(id=1)[0].theme
         self.theme_cls.primary_palette = "BlueGray"
         global sm
         sm = MDScreenManager()
@@ -305,13 +484,53 @@ class NoteApp(MDApp):
         sm.add_widget(
             NoteEditScreen(name="NoteEditScreen")
         )
+        sm.add_widget(
+            Settings(name="Settings")
+        )
+        sm.add_widget(
+            FontsSettingsScreen(name="FontsSettingsScreen")
+        )
 
         return sm
     
-
 if not os.path.exists("databases/note_base.db"):
     os.mkdir("databases")
     note_backend.note_databse.create()
+    note_backend.settings_databse.create()
     note_backend.user_database.create()
+    
+    note_backend.user_database.add(theme = "Dark")
+    
+    note_backend.settings_databse.add(tag = 'title', 
+        font="assets/fonts/RobotoMono-Thin.ttf",
+        font_size = 24,
+        bold = 1,
+        italic = 0,
+        underline = 0,
+        color = 'white'
+                                        )
+    note_backend.settings_databse.add(tag = 'subtitle', 
+        font='assets/fonts/RobotoMono-Italic.ttf',
+        font_size = 20,
+        bold = 1,
+        italic = 0,
+        underline = 0,
+        color = 'white')
+
+    note_backend.settings_databse.add(tag = 'subsubtitle',
+        font="assets/fonts/RobotoMono-Regular.ttf",
+        font_size = 18,
+        bold = 0,
+        italic = 0,
+        underline = 1,
+        color = 'white')
+    note_backend.settings_databse.add(tag = 'text',
+        font='assets/fonts/RobotoMono-Thin.ttf',
+        font_size = 16,
+        bold = 0,
+        italic = 0,
+        underline = 0,
+        color = 'white')
+
 
 NoteApp().run()

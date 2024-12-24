@@ -54,6 +54,7 @@
         orientation: 'vertical'
         MDTopAppBar:
             title: "Note"
+            right_action_items: [["menu", lambda x : root.settings()]]
         
         MDScrollView:
             do_scroll_x: False
@@ -79,6 +80,7 @@
             anchor_title: "left"
             left_action_items: [["keyboard-backspace", lambda x: root.back()]]
             right_action_items: [["check", lambda x: root.save()]]
+            
         MDBoxLayout:
             orientation: 'vertical'
             spacing: 10
@@ -110,8 +112,8 @@
                     size_hint_y : 0.5
                     mode: "rectangle"
                     hint_text: "noté ici"
-                    text_color_normal: "white"
-                    text_color_focus: "white"
+                    text_color_normal: "white" if app.theme_cls.theme_style == "Dark" else 'black'
+                    text_color_focus: "white" if app.theme_cls.theme_style == "Dark" else 'black'
                     multiline: True
                     #input_type: "text"
                     keyboard_suggestions: True
@@ -130,9 +132,11 @@
 
 <ItemConfirm>
     on_release: root.set_icon(check)
+  
 
     CheckboxLeftWidget:
         id: check
+        group: "check"
 
 <NoteShow>
     MDBoxLayout:
@@ -178,15 +182,201 @@
                     adaptive_height: True
                     orientation: 'vertical'
                     padding: dp(10)
+                    spacing: dp(10)
                     MDCard:
                         size_hint: .9, None 
-                        height: dp(60)
+                        height: dp(70)
                         md_bg_color: "#454647"
                         MDRelativeLayout:
                             MDLabel:
                                 text: "App Thème"
-                                pos_hint: {"x": 0.1, 'top': 1}
+                                pos_hint: {"x": 0.05, 'top': 1}
                             MDLabel:
-                                text: str(app.theme_cls.theme_style)
-                                pos_hint: {"x": 0.7, 'top': 1}
+                                text: "Mode sombre"
+                                adaptive_width: True
+                                pos_hint: {"center_x": 0.55, 'top': 1}
+                                color: 'teal'
+                            MDSwitch:
+                                id: theme_mode
+                                pos_hint: {"center_x": 0.7, 'center_y': 0.4}
+                                width: dp(50)
+                                on_active: root.theme_update(self)
 
+            
+          
+                    MDCard:
+                        size_hint: .9, None 
+                        height: dp(70)
+                        md_bg_color: "#454647"
+                        
+                        MDRelativeLayout:
+                            MDLabel:
+                                text: "Police d'affichage"
+                                pos_hint: {"x": 0.05, 'top': 1}
+                            MDLabel:
+                                text: root.text_font
+                                pos_hint: {"x": 0.4, 'top': 1}
+                                color: 'teal'
+                            MDTextButton:
+                                text: "Modiffier"
+                                pos_hint: {"x": 0.8, 'top': 0.5}
+                                font_size: 14
+                                color: "blue"
+                                on_press: root.update_font('text')
+                    
+                    MDCard:
+                        size_hint: .9, None 
+                        height: dp(70)
+                        md_bg_color: "#454647"
+                        
+                        MDRelativeLayout:
+                            MDLabel:
+                                text: "Police du titres"
+                                pos_hint: {"x": 0.05, 'top': 1}
+                            MDLabel:
+                                text: root.title_font
+                                pos_hint: {"x": 0.4, 'top': 1}
+                                color: 'teal'
+                            MDTextButton:
+                                text: "Modiffier"
+                                pos_hint: {"x": 0.8, 'top': 0.5}
+                                font_size: 14
+                                color: "blue"
+                                on_press: root.update_font('title')
+                    
+                    MDCard:
+                        size_hint: .9, None 
+                        height: dp(70)
+                        md_bg_color: "#454647"
+                        
+                        MDRelativeLayout:
+                            MDLabel:
+                                text: "Police des sous-titres"
+                                pos_hint: {"x": 0.05, 'top': 1}
+                            MDLabel:
+                                text: root.subtitle_font
+                                pos_hint: {"x": 0.4, 'top': 1}
+                                color: 'teal'
+                            MDTextButton:
+                                text: "Modiffier"
+                                pos_hint: {"x": 0.8, 'top': 0.5}
+                                font_size: 14
+                                color: "blue"
+                                on_press: root.update_font('subtitle')
+                    MDCard:
+                        size_hint: .9, None 
+                        height: dp(70)
+                        md_bg_color: "#454647"
+                        MDRelativeLayout:
+                            MDLabel:
+                                text: "Police du deuxième sous-titre"
+                                pos_hint: {"x": 0.05, 'top': 1}
+                            MDLabel:
+                                text: root.subsubtitle_font
+                                pos_hint: {"x": 0.4, 'top': 1}
+                                color: 'teal'
+                            MDTextButton:
+                                text: "Modiffier"
+                                pos_hint: {"x": 0.8, 'top': 0.5}
+                                font_size: 14
+                                color: "blue"
+                                on_release: root.update_font('subsubtitle')
+<FontBox>
+    size_hint_y: None
+    height: dp(60)
+
+    MDRelativeLayout:
+        MDCheckbox:
+            pos_hint: {'center_x': 0.1,'center_y': 0.5}
+            group: "group"
+            size_hint: 0.2,1
+        
+        MDLabel:
+            text: f"{root.font_name.split('.')[0]}"
+            #color: 'white'
+            font_size: 20
+            font_name: f"assets/fonts/{root.font_name}"
+            pos_hint: {'center_x': 0.6,'center_y': 0.5}
+            adaptive_width: True
+
+<FontsSettingsScreen>
+
+    MDBoxLayout:
+        orientation: 'vertical'
+        
+        MDTopAppBar:
+            title: ""
+            anchor_title: "left"
+            left_action_items: [["keyboard-backspace", lambda x: root.back()]]
+            right_action_items: [["check", lambda x: root.save()]]
+
+        MDBoxLayout:
+            orientation: 'vertical'
+            padding: dp(10)
+            MDBoxLayout:
+                size_hint_y: 0.3
+                MDRelativeLayout:
+                    MDLabel:
+                        id: overview
+                        text: "Ce texte vous donne un aperçu"
+                        markup: True
+                        adaptive_size: True
+                        pos_hint: {'center_x': 0.5,'top': 1}
+                    MDLabel:
+                        text: "T[sub]T[/sub]"
+                        markup: True
+                        adaptive_size: True
+                        pos_hint: {'center_x': 0.05,'center_y': 0.4}
+                    MDSlider:
+                        step: 2
+                        value: 20
+                        max_value: 90
+                        pos_hint: {'center_x': 0.2,'center_y': 0.4}
+                        size_hint_x: None
+                        width: dp(150)
+                        on_value: root.font_size_update(self.value)
+
+                    MDFlatButton:
+                        text: "B"
+                        adaptive_size: True
+                        bold:True
+                        #md_bg_color: "#0ccc4c"
+                        pos_hint: {'center_x': 0.4,'center_y': 0.4}
+                        on_release: root.bold_update()
+
+                    MDFlatButton:
+                        text: "[i]I[/i]"
+                        adaptive_size: True
+                        bold:True
+                        markup:True
+                        #md_bg_color: "#0ccc4c"
+                        pos_hint: {'center_x': 0.55,'center_y': 0.4}
+                        on_release: root.italic_update()
+
+                    MDFlatButton:
+                        text: "[u]U[/u]"
+                        adaptive_size: True
+                        bold:True
+                        markup: True
+                        #md_bg_color: "#0ccc4c"
+                        pos_hint: {'center_x': 0.7,'center_y': 0.4} 
+                        on_release: root.underline_update()
+
+                    MDFlatButton:
+                        text: "couleur"
+                        adaptive_size: True
+                        md_bg_color: "#0ccc4c"
+                        pos_hint: {'center_x': 0.9,'center_y': 0.4}
+                        on_release: root.open_color_picker()
+
+            MDScrollView:
+                do_scroll_x: False
+                do_scroll_y: True
+
+                MDBoxLayout:
+                    id: box_contener
+                    orientation: "vertical"
+                    adaptive_height: True
+                    spacing: dp(5)
+                    padding: dp(5)
+                    
