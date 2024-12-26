@@ -6,6 +6,7 @@ from kivy.lang import Builder
 from kivy.metrics import dp
 from kivy.properties import StringProperty, BooleanProperty,ObjectProperty,DictProperty
 from kivy.utils import get_hex_from_color
+from kivy.clock import Clock
 
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.screenmanager import MDScreenManager
@@ -15,9 +16,6 @@ from kivymd.uix.list import IRightBodyTouch, OneLineAvatarIconListItem
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.behaviors.focus_behavior import FocusBehavior
 from kivymd.uix.behaviors import CommonElevationBehavior
-from kivymd.uix.button import MDFlatButton, MDTextButton
-from kivymd.uix.dialog import  MDDialog
-from kivymd.uix.label import MDLabel
 from kivymd.uix.pickers.colorpicker import MDColorPicker
 
 
@@ -35,7 +33,7 @@ Builder.load_file("templates/note.kv")
 # global variable
 note_name = None
 settings_tag = None 
-
+last_screen = None
 
 class Item(OneLineAvatarIconListItem):
     left_icon = StringProperty()
@@ -177,12 +175,19 @@ class NoteShow(MDScreen):
         super().__init__(*args, **kwargs)
         self.login = True
         self.dialog = None
+        
+        self.titles = None
+        self.subtitles = None
+        self.subsubtitles = None
+        self.texts = None
+        
     
     def on_parent(self, widget, parent):
         global note_name
         
         if self.login:
             self.dialog = None
+            self.load_parmaters()
             if note_name != None:
                 self.exist = True
                 self.dataObject = note_backend.note_databse.get(title = note_name)[0]
@@ -191,6 +196,12 @@ class NoteShow(MDScreen):
                 
         
         self.login = not self.login
+    
+    def load_parmaters(self):
+        self.titles = note_backend.settings_databse.get(tag = 'title')[0]
+        self.subtitles = note_backend.settings_databse.get(tag = 'subtitle')[0]
+        self.subsubtitles = note_backend.settings_databse.get(tag = 'subsubtitle')[0]
+        self.texts = note_backend.settings_databse.get(tag = 'text')[0]
     
     def parsing(self,md_text) -> str:
         parsed_text = ""
@@ -208,24 +219,45 @@ class NoteShow(MDScreen):
         for line in lines:
             line = line.strip()
             if line.startswith("# "):  # Titre de niveau 1
-                line = f"[b][size=34]{line[2:].title()}[/size][/b]"
+                line = f"[b][font={self.titles.font}][size={self.titles.font_size}][color={self.titles.color}]{line[2:].title()}[/color][/size][/font][/b]"
+                if self.titles.underline:
+                    line = f"[u]{line}[/u]"
+                
+                if bool(self.titles.italic):
+                    line = f"[i]{line}[/i]"
                 
             elif line.startswith("## "):  # Titre de niveau 2
-                line = f"[b][size=28]{line[3:].title()}[/size][/b]"
+                line = f"[b][font={self.subtitles.font}][size={self.subtitles.font_size}][color={self.subtitles.color}]{line[2:].title()}[/color][/size][/font][/b]"
+                if bool(self.subtitles.underline):
+                    line = f"[u]{line}[/u]"
+                
+                if bool(self.subtitles.italic):
+                    line = f"[i]{line}[/i]"
                 
             elif line.startswith("### "):  # Titre de niveau 3
-                line = f"[b][size=24]{line[4:].title()}[/size][/b]"
+                line = f"[font={self.subsubtitles.font}][size={self.subsubtitles.font_size}][color={self.subsubtitles.color}]{line[2:].title()}[/color][/size][/font]"
+                if bool(self.subsubtitles.underline):
+                    line = f"[u]{line}[/u]"
+                
+                if bool(self.subsubtitles.italic):
+                    line = f"[i]{line}[/i]"
                 
             elif line.startswith("- ") or line.startswith("* "):  # Liste
                 line = f"{' '*4}[b][size=28]• [/size][/b]{line[2:]}"
+                line = f"[font={self.texts.font}][size={self.texts.font_size}][color={self.texts.color}]{line}[/color][/size][/font]"
+                
                 
             if "**" in line:  # Texte en gras
                 line = line.replace("**", "[b]",1).replace("**", "[/b]",1)
+                line = f"[font={self.texts.font}][size={self.texts.font_size}][color={self.texts.color}]{line}[/color][/size][/font]"
+                
                 i +=1
         
                 
             if "__" in line:  # Texte en italique
                 line = line.replace("__", "[i]",1).replace("__", "[/i]",1)
+                line = f"[font={self.texts.font}][size={self.texts.font_size}][color={self.texts.color}]{line}[/color][/size][/font]"
+                
                 i += 1
         
         
@@ -247,6 +279,12 @@ class NoteShow(MDScreen):
     def delete(self):
         self.dataObject.remove()
         self.back()
+    
+    def menu_options(self):
+        global last_screen 
+        last_screen = self.name
+        sm.current = "Settings"
+        sm.transition.direction = 'right'
     
     def back(self):
         global note_name
@@ -280,6 +318,8 @@ class NoteMainScreen(MDScreen):
         self.login = not self.login
     
     def settings(self):
+        global last_screen
+        last_screen = self.name
         sm.current = "Settings"
         sm.transition.direction = 'left'
     
@@ -335,7 +375,9 @@ class Settings(MDScreen):
         sm.transition.direction = 'left'
         
     def back(self):
-        sm.current = "NoteMainScreen"
+        global last_screen 
+        
+        sm.current = last_screen
         sm.transition.direction = 'right' 
  
 class FontBox(MDCard):
@@ -363,6 +405,7 @@ class FontsSettingsScreen(MDScreen):
         }
         self.login = False
         self.fonts = note_backend.get_fonts()
+        Clock.schedule_once(self.load_font, 0.1)
     
     def on_parent(self, widget, parent):
         if not self.login:
@@ -374,16 +417,18 @@ class FontsSettingsScreen(MDScreen):
             self.settings['italic'] = obj.italic
             self.settings['underline'] = obj.underline
             self.settings['color'] = obj.color
-            box_contener = self.ids["box_contener"]
-            box_contener.clear_widgets()
             
-            for font in self.fonts:
-                box_contener.add_widget(
-                    FontBox(font_name = font,press_fonc = lambda x : self.font_update(x))
-                )
-        
-        
+
         self.login = not self.login
+    
+    def load_font(self,dt):
+        box_contener = self.ids["box_contener"]
+        box_contener.clear_widgets()
+            
+        for font in self.fonts:
+            box_contener.add_widget(
+                FontBox(font_name = font,press_fonc = lambda x : self.font_update(x))
+            )
     
     def bold_update(self):
         if self.settings.get('bold') == 1:
@@ -416,7 +461,7 @@ class FontsSettingsScreen(MDScreen):
         self.update_overview()
     
     def font_size_update(self,size):
-        self.settings['font_size'] = size
+        self.settings['font_size'] = int(size)
         
         self.update_overview()
     
@@ -502,35 +547,37 @@ if not os.path.exists("databases/note_base.db"):
     note_backend.user_database.add(theme = "Dark")
     
     note_backend.settings_databse.add(tag = 'title', 
-        font="assets/fonts/RobotoMono-Thin.ttf",
+        font="assets/fonts/PlayfairDisplay-Black.ttf",
         font_size = 24,
         bold = 1,
         italic = 0,
         underline = 0,
-        color = 'white'
+        color = '#04ff06ff'
                                         )
     note_backend.settings_databse.add(tag = 'subtitle', 
-        font='assets/fonts/RobotoMono-Italic.ttf',
-        font_size = 20,
+        font='assets/fonts/PlayfairDisplay-Italic.ttf',
+        font_size = 22,
         bold = 1,
         italic = 0,
         underline = 0,
-        color = 'white')
+        color = '#3abbffff')
 
     note_backend.settings_databse.add(tag = 'subsubtitle',
-        font="assets/fonts/RobotoMono-Regular.ttf",
+        font="assets/fonts/Oswald-Light.ttf",
         font_size = 18,
         bold = 0,
         italic = 0,
         underline = 1,
-        color = 'white')
+        color = '#ffffff')
     note_backend.settings_databse.add(tag = 'text',
-        font='assets/fonts/RobotoMono-Thin.ttf',
+        font='assets/fonts/RobotoMono-Light.ttf',
         font_size = 16,
         bold = 0,
         italic = 0,
         underline = 0,
-        color = 'white')
+        color = '#ffff8cff')
 
 
 NoteApp().run()
+
+

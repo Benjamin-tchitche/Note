@@ -13,10 +13,10 @@ package.domain = org.test
 source.dir = .
 
 # (list) Source files to include (let empty to include all the files)
-source.include_exts = py,png,jpg,jpeg,kv,atlas,ini
+source.include_exts = py,png,jpg,jpeg,kv,atlas,ini,ttf
 
 # (list) List of inclusions using pattern matching
-source.include_patterns = assets/*,assets/image*,images/*.png,templates/*,*.ini
+source.include_patterns = assets/*,assets/image*,assets/fonts/*,images/*.png,templates/*,*.ini
 
 # (list) Source files to exclude (let empty to not exclude anything)
 #source.exclude_exts = spec
@@ -29,7 +29,7 @@ source.exclude_dirs = tests, bin, env
 #source.exclude_patterns = license,images/*/*.jpg
 
 # (str) Application versioning (method 1)
-version = 0.1
+version = 1.0
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]

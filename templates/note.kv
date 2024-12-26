@@ -146,7 +146,7 @@
             title: root.note_title
             anchor_title: "left"
             left_action_items: [["keyboard-backspace", lambda x: root.back()]]
-            right_action_items: [["delete",lambda x: root.delete()],["pencil", lambda x: root.update()]] #["menu",lambda x: root.setting()]
+            right_action_items: [["delete",lambda x: root.delete()],["pencil", lambda x: root.update()],["menu", lambda x: root.menu_options()]] #["menu",lambda x: root.setting()]
         
         MDBoxLayout:
             orientation: 'vertical'
